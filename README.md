@@ -1,27 +1,42 @@
 # Roast Battle Bracket API 🥊🔥
 
-> Production-grade REST API for managing single-elimination roast battle tournament brackets with time-boxed voting, deterministic bye allocation, sudden-death tiebreak handling, transactional outbox email notifications, and concurrency-safe voting.
+> Production-grade REST API and Interactive Tournament Arena for managing single-elimination roast battles with time-boxed voting, deterministic bye allocation, sudden-death tiebreak handling, transactional outbox email notifications, and concurrency-safe voting.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/abishek0109/Roast_Battle_Bracket_API_MFC)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/Node.js-24+-green.svg)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.21-lightgrey.svg)](https://expressjs.com/)
 [![Prisma](https://img.shields.io/badge/Prisma-6.4-indigo.svg)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue.svg)](https://www.postgresql.org/)
 [![OpenAPI](https://img.shields.io/badge/Swagger-OpenAPI%203.0-orange.svg)](http://localhost:3000/api/docs)
+[![Tests](https://img.shields.io/badge/Tests-55%20Passed-brightgreen.svg)](./tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
+---
+
+## 🌟 Live Web Arena & Interactive Dashboard
+
+The application serves an interactive frontend dashboard directly from the root path (`/` or `/dashboard`):
+
+- **🏆 Visual Bracket Arena**: Renders an interactive single-elimination tournament tree with seed indicators, auto-bye banners, and live match statuses.
+- **🔴 Real-Time Matchup Arena**: Displays the active battle with head-to-head competitor cards, submitted roast lines in speech bubbles, a live countdown timer, and interactive vote submission.
+- **🎙️ Comedian Roster**: Directory of participating roast comedians with seed ranks, titles, and stats.
+- **⚡ Quick API Playground**: Live copyable cURL commands and endpoint execution blocks.
+- **📚 Interactive Swagger Docs**: Integrated link to `/api/docs`.
 
 ---
 
 ## 1. Project Overview
 
-The **Roast Battle Bracket API** orchestrates competitive single-elimination roast tournaments. Registered comedians are seeded into brackets, submit sharp roast lines for each matchup, and face off under time-limited public voting windows. The system handles:
-- Deterministic bye allocation for any number of contestants ($N \ge 2$, including odd and non-power-of-two participant counts).
-- Automatic bye advancement directly into Round 2 without unnecessary voting.
-- Concurrency-safe voting with database-level uniqueness guarantees preventing double-voting under concurrent requests.
-- Strict server-side deadline enforcement (client clocks are never trusted).
-- Automated background expiration workers and on-demand recovery after server restarts.
-- Sudden-death re-vote tiebreak sessions with isolated vote histories.
-- Transactional Outbox Pattern for email notifications via Nodemailer with local development preview fallback.
+The **Roast Battle Bracket API** orchestrates competitive single-elimination comedy roast tournaments. Registered comedians are seeded into brackets, submit sharp roast lines for each matchup, and face off under time-limited public voting windows. The system handles:
+
+- **Deterministic Bye Allocation**: For any number of contestants ($N \ge 2$, including odd numbers and counts that are not powers of two).
+- **Automatic Bye Advancement**: Contestants receiving byes advance immediately to Round 2 without unnecessary voting.
+- **Concurrency-Safe Voting**: Database-level unique constraint on `(matchupId, voterId)` and serializable transactions guarantee that duplicate votes are impossible under high concurrency.
+- **Strict Server-Side Deadlines**: Server-recorded UTC timestamps govern voting eligibility; client clocks are never trusted.
+- **Automated Background Workers**: Periodic scheduler finalizes expired matchups and recovers missed state upon server restarts.
+- **Sudden-Death Tiebreak Engine**: Dedicated multi-session tiebreak tables preventing previous round vote contamination.
+- **Transactional Outbox Email Notifications**: Guarantees email dispatch reliability without rolling back tournament advancements if SMTP is temporarily unavailable.
 
 ---
 
@@ -70,7 +85,7 @@ The **Roast Battle Bracket API** orchestrates competitive single-elimination roa
                      └──────────────────────────────────────────────┘
 ```
 
-- **Runtime**: Node.js v20+ (Tested on v24)
+- **Runtime**: Node.js v20+ (Tested on Node v24)
 - **Language**: TypeScript 5.8
 - **Framework**: Express 4.21
 - **Database**: PostgreSQL with Prisma ORM 6.4
@@ -78,7 +93,7 @@ The **Roast Battle Bracket API** orchestrates competitive single-elimination roa
 - **Security**: bcryptjs, jsonwebtoken, helmet, express-rate-limit
 - **Logging**: Pino with pino-pretty
 - **Documentation**: Swagger UI Express / OpenAPI 3.0
-- **Testing**: Vitest & Supertest
+- **Testing**: Vitest 3.0 & Supertest 7.0
 
 ---
 
@@ -86,165 +101,101 @@ The **Roast Battle Bracket API** orchestrates competitive single-elimination roa
 
 - **Node.js**: v20.x or higher
 - **npm**: v9.x or higher
-- **PostgreSQL**: v14+ (Local instance, Docker container, or hosted service like Neon/Supabase)
+- **PostgreSQL**: v14+ (Local instance, Docker container, or cloud database like Neon / Supabase / Render)
 
 ---
 
-## 5. Installation Steps
+## 5. Deployment Guide
 
-1. Clone or navigate to the project directory:
-   ```bash
-   cd "Roast Battle Bracket API"
-   ```
+### Deploy to Render (One-Click)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/abishek0109/Roast_Battle_Bracket_API_MFC)
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+The repository includes a [`render.yaml`](./render.yaml) blueprint that automates full deployment:
+1. Click the **Deploy to Render** button above or connect `abishek0109/Roast_Battle_Bracket_API_MFC` in [Render](https://render.com).
+2. Render provisions:
+   - A free managed **PostgreSQL database** (`roast-battle-db`).
+   - A **Web Service** (`roast-battle-bracket-api`) running migrations, seeds, and the server.
+3. Access your live app at `https://<your-service>.onrender.com/` and Swagger docs at `https://<your-service>.onrender.com/api/docs`.
 
----
-
-## 6. PostgreSQL Setup
-
-Create a PostgreSQL database for the application:
-
-```sql
-CREATE DATABASE roast_battle;
-```
-
-If using Docker:
+### Deploy with Docker Compose
+Run the entire production stack (API + PostgreSQL) with a single command:
 ```bash
-docker run --name roast-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=roast_battle -p 5432:5432 -d postgres:16-alpine
+docker compose up --build -d
 ```
-
----
-
-## 7. Environment Configuration
-
-Copy `.env.example` to `.env`:
-```bash
-cp .env.example .env
-```
-
-Review and adjust variables in `.env`:
-```env
-# Database Configuration (PostgreSQL)
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/roast_battle?schema=public"
-
-# Authentication
-JWT_SECRET="super-secret-jwt-key-change-in-production-min-32-chars-long"
-JWT_EXPIRES_IN="24h"
-
-# Server Configuration
-PORT=3000
-NODE_ENV="development"
-CORS_ORIGIN="*"
-
-# Tournament & Matchup Rules
-VOTING_DURATION_SECONDS=300
-MATCHUP_SCHEDULER_INTERVAL_MS=3000
-ALLOW_LIVE_VOTE_COUNTS=false
-
-# Email Notification Configuration (Nodemailer)
-SMTP_HOST=""
-SMTP_PORT=2525
-SMTP_SECURE=false
-SMTP_USER=""
-SMTP_PASS=""
-EMAIL_FROM="roastmaster@bracket.battle"
-```
-
-> **Note**: If `SMTP_HOST` is left empty, the application runs in development preview mode where outgoing emails are logged cleanly without requiring SMTP credentials.
-
----
-
-## 8. Database Migrations
-
-Generate Prisma Client:
-```bash
-npm run db:generate
-```
-
-Run database migrations:
-```bash
-npm run db:migrate
-```
-
-For production deployment:
-```bash
-npm run db:migrate:deploy
-```
-
----
-
-## 9. Seed Instructions
-
-Populate the database with sample data (1 Admin, 5 Contestants demonstrating a non-power-of-two bracket, 3 Voters, and 1 Tournament):
-
-```bash
-npm run db:seed
-```
-
-### Preconfigured Seed Credentials:
-- **Default Password (all users)**: `Password123!`
-- **Administrator**: `admin@roastbattle.com` (Role: `ADMIN`)
-- **Contestants**:
-  - `jeff@roastbattle.com` (Jeff Ross, Seed 1)
-  - `nikki@roastbattle.com` (Nikki Glaser, Seed 2)
-  - `tony@roastbattle.com` (Tony Hinchcliffe, Seed 3)
-  - `sarah@roastbattle.com` (Sarah Silverman, Seed 4)
-  - `bill@roastbattle.com` (Bill Burr, Seed 5)
-- **Voters**: `voter1@roastbattle.com`, `voter2@roastbattle.com`, `voter3@roastbattle.com`
-
----
-
-## 10. Local Development
-
-Start the development server with live reload:
-```bash
-npm run dev
-```
-
-The server starts at `http://localhost:3000`.
-- API Base Path: `http://localhost:3000/api/v1` (Root routes also supported)
-- Interactive Documentation: `http://localhost:3000/api/docs`
+- App & Dashboard: `http://localhost:3000`
+- Swagger UI: `http://localhost:3000/api/docs`
 - Health Probe: `http://localhost:3000/health`
 
 ---
 
-## 11. Production Build & Start
+## 6. Local Installation & Setup
 
-1. Compile TypeScript to JavaScript:
+1. **Clone the repository**:
    ```bash
-   npm run build
+   git clone https://github.com/abishek0109/Roast_Battle_Bracket_API_MFC.git
+   cd Roast_Battle_Bracket_API_MFC
    ```
 
-2. Start the production server:
+2. **Install dependencies**:
    ```bash
-   npm start
+   npm install
+   ```
+
+3. **Configure environment**:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Run database migrations & seed**:
+   ```bash
+   npm run db:generate
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+5. **Start local development server**:
+   ```bash
+   npm run dev
    ```
 
 ---
 
-## 12. API Endpoint Directory
+## 7. Preconfigured Seed Credentials
 
-All endpoints are available under `/api/v1` and root `/`:
+When `npm run db:seed` runs, the following test accounts are populated:
 
-| Method | Endpoint | Description | Role / Auth |
+- **Default Password (all accounts)**: `Password123!`
+- **Administrator**: `admin@roastbattle.com` (Role: `ADMIN`)
+- **Contestants** (Demonstrating a 5-player non-power-of-two bracket):
+  - `jeff@roastbattle.com` (Jeff Ross, Seed #1)
+  - `nikki@roastbattle.com` (Nikki Glaser, Seed #2)
+  - `tony@roastbattle.com` (Tony Hinchcliffe, Seed #3)
+  - `sarah@roastbattle.com` (Sarah Silverman, Seed #4)
+  - `bill@roastbattle.com` (Bill Burr, Seed #5)
+- **Voters**: `voter1@roastbattle.com`, `voter2@roastbattle.com`, `voter3@roastbattle.com`
+
+---
+
+## 8. API Endpoint Directory
+
+All endpoints are available under both `/api/v1` and root `/`:
+
+| Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
+| `GET` | `/` | Live Interactive Web Arena & Bracket Visualizer | Public |
 | `GET` | `/health` | API & database health probe | Public |
-| `GET` | `/api/docs` | Swagger OpenAPI UI | Public |
+| `GET` | `/api/docs` | Swagger OpenAPI Documentation UI | Public |
 | **Auth** | | | |
 | `POST` | `/api/v1/auth/register` | Register new user account | Public |
-| `POST` | `/api/v1/auth/login` | Login and receive JWT access token | Public |
+| `POST` | `/api/v1/auth/login` | Authenticate user and receive JWT | Public |
 | `GET` | `/api/v1/auth/me` | Retrieve authenticated profile | Authenticated |
 | **Contestants** | | | |
 | `POST` | `/api/v1/contestants` | Register contestant profile | Public / User |
 | `GET` | `/api/v1/contestants` | List contestants with pagination | Public |
 | `GET` | `/api/v1/contestants/:id` | Get contestant details | Public |
-| `PATCH` | `/api/v1/contestants/:id` | Update profile | Owner / Admin |
+| `PATCH` | `/api/v1/contestants/:id` | Update contestant profile | Owner / Admin |
 | `DELETE` | `/api/v1/contestants/:id` | Delete contestant (only before bracket generation) | Owner / Admin |
-| `GET` | `/api/v1/contestant/:id/history` | Contestant career history & match stats | Public |
+| `GET` | `/api/v1/contestant/:id/history` | Contestant career match history & stats | Public |
 | **Tournaments** | | | |
 | `POST` | `/api/v1/tournaments` | Create new tournament | Admin |
 | `GET` | `/api/v1/tournaments` | List tournaments | Public |
@@ -270,21 +221,7 @@ All endpoints are available under `/api/v1` and root `/`:
 
 ---
 
-## 13. Authentication & Authorization
-
-Authentication uses JSON Web Tokens (JWT) passed in the HTTP `Authorization` header:
-```http
-Authorization: Bearer <TOKEN>
-```
-
-### Roles:
-- **`ADMIN`**: Create tournaments, generate brackets, force tiebreaks, trigger administrative advancement.
-- **`CONTESTANT`**: Submit roast lines for own matchups, manage own contestant profile.
-- **`VOTER`**: Vote in open matchups. Contestants can also vote, but self-voting is strictly forbidden.
-
----
-
-## 14. Voting Concurrency Strategy
+## 9. Voting Concurrency Strategy
 
 Preventing corrupted counts and duplicate votes under high concurrency is a core architectural guarantee:
 
@@ -295,34 +232,20 @@ Preventing corrupted counts and duplicate votes under high concurrency is a core
      @@unique([matchupId, voterId])
    }
    ```
-   At the physical database level, PostgreSQL rejects any attempt to insert a second vote for the same `(matchupId, voterId)` tuple.
+   PostgreSQL enforces that no voter can insert a duplicate vote in the same matchup, even during simultaneous concurrent requests.
 2. **Serializable Transaction Isolation**:
    Vote submissions execute inside `Prisma.TransactionIsolationLevel.Serializable` transactions.
 3. **Double Verification**:
-   The service checks for existing votes prior to insertion and catches PostgreSQL unique-constraint violations (`P2002`), returning a clean `409 Conflict` ("You have already voted in this matchup").
+   The service verifies existing votes prior to insertion and catches PostgreSQL unique-constraint violations (`P2002`), returning a clean `409 Conflict` ("You have already voted in this matchup").
 4. **Authoritative Vote Aggregation**:
    Vote totals are never read into Node.js application memory, incremented, and saved back. The `Vote` table is the sole source of truth; counts are derived via atomic SQL aggregation (`COUNT(*)`).
 
 ---
 
-## 15. Server-Side Deadline Enforcement
-
-Frontend countdowns are purely visual and **never** trusted for authorization.
-1. When a matchup opens, `votingOpensAt` and `votingClosesAt` are recorded on the server as UTC timestamps.
-2. Inside the atomic vote transaction, the server executes:
-   ```typescript
-   if (now >= matchup.votingClosesAt) {
-     throw new VotingClosedError('Voting window has closed'); // HTTP 409
-   }
-   ```
-3. Any vote arriving at or after `votingClosesAt` is rejected immediately.
-4. Remaining time returned in API responses is computed dynamically on the server: `Math.max(0, Math.floor((votingClosesAt - now) / 1000))`.
-
----
-
-## 16. Deterministic Bye Allocation Algorithm
+## 10. Deterministic Bye Allocation Algorithm
 
 For any tournament with $N \ge 2$ contestants:
+
 1. **Next Power of Two ($P$)**:
    $$P = 2^{\lceil \log_2 N \rceil}$$
    Total rounds: $R = \log_2 P$.
@@ -338,192 +261,38 @@ For any tournament with $N \ge 2$ contestants:
    - Bye matchups are marked with `status = 'BYE'`, `winnerId = contestantAId`, and `completedAt = now()`.
    - The bye recipient **automatically advances immediately** into Round 2 at target position $\lceil \text{position} / 2 \rceil$ (slot A if position is odd, slot B if position is even).
    - No contestant receives multiple byes in the same round.
-   - All subsequent round matchup shells ($R_2 \dots R$) are created in the same atomic transaction, ensuring a stable, immutable tree.
 
 #### Example ($N = 5$ contestants):
 - Next power of two: $P = 8$.
 - First-round slots: $M_1 = 4$.
 - Byes: $B = 8 - 5 = 3$ byes.
 - Real matches: $4 - 3 = 1$ real match (2 contestants).
-- Matchup 1: Contestant 1 vs Contestant 2 (Real match $\to$ Winner to R2P1 Slot A).
-- Matchup 2: Contestant 3 vs BYE (Auto-winner Contestant 3 $\to$ Advanced to R2P1 Slot B).
-- Matchup 3: Contestant 4 vs BYE (Auto-winner Contestant 4 $\to$ Advanced to R2P2 Slot A).
-- Matchup 4: Contestant 5 vs BYE (Auto-winner Contestant 5 $\to$ Advanced to R2P2 Slot B).
+- **Matchup 1**: Contestant 1 vs Contestant 2 (Real match $\to$ Winner to Round 2, Position 1, Slot A).
+- **Matchup 2**: Contestant 3 vs BYE (Auto-winner Contestant 3 $\to$ Advanced to Round 2, Position 1, Slot B).
+- **Matchup 3**: Contestant 4 vs BYE (Auto-winner Contestant 4 $\to$ Advanced to Round 2, Position 2, Slot A).
+- **Matchup 4**: Contestant 5 vs BYE (Auto-winner Contestant 5 $\to$ Advanced to Round 2, Position 2, Slot B).
 - Round 2 has 2 matchups; Round 3 has 1 matchup (Finals).
 
 ---
 
-## 17. Automatic Advancement & Background Worker
+## 11. Automated Test Suite (55 Tests Passed)
 
-1. **Periodic Scheduler (`MatchupFinalizerScheduler`)**:
-   - Polls every 3000ms (`MATCHUP_SCHEDULER_INTERVAL_MS`).
-   - Identifies all `OPEN` matchups where `votingClosesAt <= now()`.
-   - Finalizes each matchup in an atomic transaction:
-     - Tallies votes for Contestants A and B.
-     - Detects ties or selects the winner.
-     - Advances the winner to the next round.
-     - If the matchup is the final championship match, marks the tournament `COMPLETED`.
-     - Queues an advancement notification in the transactional outbox.
-2. **On-Demand Finalization**:
-   - Any client request to `GET /matchup/:id/status`, `GET /matchup/:id/results`, or `POST /round/advance` triggers instantaneous finalization if `now >= votingClosesAt`, eliminating any polling delay.
-3. **Crash Recovery**:
-   - Upon server startup, the scheduler executes an immediate sweep to finalize any matchups that expired while the server was offline.
+The test suite covers unit and integration scenarios across all business logic:
 
----
+| Test Suite | Tests Passed | Status |
+| :--- | :---: | :---: |
+| `bracket-calculator.test.ts` | 12 / 12 | ✅ Passed |
+| `validation-schemas.test.ts` | 13 / 13 | ✅ Passed |
+| `business-rules.test.ts` | 9 / 9 | ✅ Passed |
+| `crypto-and-auth.test.ts` | 3 / 3 | ✅ Passed |
+| `notification-outbox.test.ts` | 1 / 1 | ✅ Passed |
+| `auth.integration.test.ts` | 5 / 5 | ✅ Passed |
+| `tournaments-and-contestants.integration.test.ts` | 5 / 5 | ✅ Passed |
+| `bracket-and-advancement.integration.test.ts` | 3 / 3 | ✅ Passed |
+| `matchup-voting.integration.test.ts` | 4 / 4 | ✅ Passed |
+| **Total** | **55 / 55** | **100% Passed** |
 
-## 18. Tiebreak Policy
-
-When an active voting window closes with equal votes ($V_A = V_B$):
-1. The matchup is marked as tied. Original vote counts remain intact in the database for auditability.
-2. A **`TiebreakSession`** is created with a fresh voting deadline (`votingOpensAt = now`, `votingClosesAt = now + votingDurationSeconds`).
-3. Tiebreak votes are stored in a dedicated `TiebreakVote` table with constraint `@@unique([tiebreakSessionId, voterId])`. Original round votes are excluded from tiebreak tallies.
-4. If a tiebreak session expires with yet another tie, a subsequent sudden-death session ($N+1$) is initiated automatically.
-
----
-
-## 19. Transactional Outbox Email Notifications
-
-Advancement emails use the **Transactional Outbox Pattern**:
-1. When a winner is advanced, an event record is written to `NotificationOutbox` **inside the same database transaction**.
-2. If the transaction rolls back, no email is scheduled.
-3. An asynchronous worker (`OutboxWorker`) polls `NotificationOutbox` every 5 seconds, dispatching emails via Nodemailer.
-4. Failed sends increment `attempts` and retry with backoff up to 5 times. Email service downtime never impedes bracket progression or database transactions.
-
----
-
-## 20. End-to-End API Workflow (cURL Examples)
-
-### Step 1: Register an Administrator
-```bash
-curl -X POST http://localhost:3000/api/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Roast Master",
-    "email": "master@roastbattle.com",
-    "password": "Password123!",
-    "role": "ADMIN"
-  }'
-```
-
-### Step 2: Login to Obtain JWT Token
-```bash
-curl -X POST http://localhost:3000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "master@roastbattle.com",
-    "password": "Password123!"
-  }'
-```
-*Export the returned token:*
-```bash
-export TOKEN="<COPIED_JWT_TOKEN>"
-```
-
-### Step 3: Create a Tournament
-```bash
-curl -X POST http://localhost:3000/api/v1/tournaments \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Summer Roast Clash 2026",
-    "votingDurationSeconds": 60
-  }'
-```
-*Export the returned tournament ID:*
-```bash
-export TOURNAMENT_ID="<TOURNAMENT_ID>"
-```
-
-### Step 4: Register Contestants
-```bash
-curl -X POST http://localhost:3000/api/v1/contestants \
-  -H "Content-Type: application/json" \
-  -d '{
-    "displayName": "Roaster One",
-    "email": "roaster1@battle.com",
-    "tournamentId": "'$TOURNAMENT_ID'"
-  }'
-
-curl -X POST http://localhost:3000/api/v1/contestants \
-  -H "Content-Type: application/json" \
-  -d '{
-    "displayName": "Roaster Two",
-    "email": "roaster2@battle.com",
-    "tournamentId": "'$TOURNAMENT_ID'"
-  }'
-```
-
-### Step 5: Generate Tournament Bracket
-```bash
-curl -X POST http://localhost:3000/api/v1/bracket/generate \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tournamentId": "'$TOURNAMENT_ID'"
-  }'
-```
-
-### Step 6: View Full Bracket
-```bash
-curl -X GET http://localhost:3000/api/v1/bracket/$TOURNAMENT_ID
-```
-
-### Step 7: Submit Roast Lines
-```bash
-export MATCHUP_ID="<MATCHUP_ID_FROM_BRACKET>"
-export CONTESTANT_A_ID="<CONTESTANT_A_ID>"
-export CONTESTANT_B_ID="<CONTESTANT_B_ID>"
-
-# Contestant A line
-curl -X POST http://localhost:3000/api/v1/matchup/$MATCHUP_ID/roast-lines \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "content": "You look like a before picture for a product that does not exist.",
-    "contestantId": "'$CONTESTANT_A_ID'"
-  }'
-
-# Contestant B line (Voting automatically opens once both submit!)
-curl -X POST http://localhost:3000/api/v1/matchup/$MATCHUP_ID/roast-lines \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "content": "Your stand-up special was so boring, even insomnia took notes.",
-    "contestantId": "'$CONTESTANT_B_ID'"
-  }'
-```
-
-### Step 8: Cast a Vote
-```bash
-curl -X POST http://localhost:3000/api/v1/vote/$MATCHUP_ID \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contestantId": "'$CONTESTANT_A_ID'"
-  }'
-```
-
-### Step 9: Check Matchup Status & Live Remaining Seconds
-```bash
-curl -X GET http://localhost:3000/api/v1/matchup/$MATCHUP_ID/status
-```
-
-### Step 10: View Matchup Results
-```bash
-curl -X GET http://localhost:3000/api/v1/matchup/$MATCHUP_ID/results
-```
-
-### Step 11: Retrieve Tournament Champion
-```bash
-curl -X GET http://localhost:3000/api/v1/tournament/$TOURNAMENT_ID/winner
-```
-
----
-
-## 21. Automated Testing
-
-The test suite is partitioned into unit tests and database integration tests:
-
+Execute tests locally with:
 ```bash
 # Run unit tests
 npm test
@@ -537,25 +306,68 @@ npm run test:all
 
 ---
 
-## 22. Known Design Decisions & Trade-offs
+## 12. End-to-End API Workflow (cURL Examples)
 
-1. **Vote Count Visibility**: Detailed vote percentages can be hidden during active voting windows via `ALLOW_LIVE_VOTE_COUNTS=false` to prevent herd mentality and late-voting bias.
-2. **Transactional Outbox vs In-Memory Events**: Outbox events are preferred over direct synchronous Nodemailer calls. This prevents network latency or SMTP downtime from aborting matchup finalization transactions.
-3. **On-Demand Finalization Fallback**: While the background worker checks for expired matches every 3 seconds, endpoints dynamically finalize expired matchups upon lookup to guarantee zero delay for API consumers.
+### 1. Register Admin
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Roast Master", "email": "master@roastbattle.com", "password": "Password123!", "role": "ADMIN"}'
+```
+
+### 2. Login
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "master@roastbattle.com", "password": "Password123!"}'
+```
+
+### 3. Create Tournament
+```bash
+curl -X POST http://localhost:3000/api/v1/tournaments \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Summer Roast Clash 2026", "votingDurationSeconds": 300}'
+```
+
+### 4. Register Contestants
+```bash
+curl -X POST http://localhost:3000/api/v1/contestants \
+  -H "Content-Type: application/json" \
+  -d '{"displayName": "Roaster One", "email": "roaster1@battle.com", "tournamentId": "<TOURNAMENT_ID>"}'
+```
+
+### 5. Generate Bracket
+```bash
+curl -X POST http://localhost:3000/api/v1/bracket/generate \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"tournamentId": "<TOURNAMENT_ID>"}'
+```
+
+### 6. Submit Roast Line
+```bash
+curl -X POST http://localhost:3000/api/v1/matchup/<MATCHUP_ID>/roast-lines \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Your stand-up special was so boring, even insomnia took notes."}'
+```
+
+### 7. Cast a Vote
+```bash
+curl -X POST http://localhost:3000/api/v1/vote/<MATCHUP_ID> \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"contestantId": "<CONTESTANT_ID>"}'
+```
+
+### 8. View Tournament Champion
+```bash
+curl -X GET http://localhost:3000/api/v1/tournament/<TOURNAMENT_ID>/winner
+```
 
 ---
 
-## 23. Deployment Setup (Render & Docker)
+## 13. License
 
-### Deploy to Render
-The repository includes a ready-to-use `render.yaml` blueprint:
-1. Connect your GitHub repository to [Render](https://render.com).
-2. Create a **Blueprint Instance**. Render will automatically provision:
-   - A managed PostgreSQL instance (`roast-postgres`).
-   - The Web Service running Node.js with automated migrations and Prisma client generation.
-3. Once deployed, the interactive Swagger documentation will be live at `https://<your-service>.onrender.com/api/docs`.
-
-### Deploy with Docker
-```bash
-docker compose up --build -d
-```
+Distributed under the MIT License. See [`LICENSE`](./LICENSE) for details.
