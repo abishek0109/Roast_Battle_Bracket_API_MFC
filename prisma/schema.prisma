@@ -1,0 +1,226 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CONTESTANT
+  VOTER
+}
+
+enum TournamentStatus {
+  REGISTRATION
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum MatchupStatus {
+  PENDING
+  OPEN
+  CLOSED
+  COMPLETED
+  BYE
+}
+
+enum TiebreakStatus {
+  PENDING
+  OPEN
+  COMPLETED
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  passwordHash  String
+  role          Role           @default(VOTER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  contestant    Contestant?
+  votes         Vote[]
+  tiebreakVotes TiebreakVote[]
+
+  @@map("users")
+}
+
+model Contestant {
+  id                    String                 @id @default(uuid())
+  userId                String?                @unique
+  displayName           String
+  email                 String                 @unique
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  user                  User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tournaments           TournamentContestant[]
+  matchupsAsA           Matchup[]              @relation("MatchupContestantA")
+  matchupsAsB           Matchup[]              @relation("MatchupContestantB")
+  matchupsWon           Matchup[]              @relation("MatchupWinner")
+  roastLines            RoastLine[]
+  votesReceived         Vote[]
+  tiebreakVotesReceived TiebreakVote[]
+
+  @@map("contestants")
+}
+
+model Tournament {
+  id                    String                 @id @default(uuid())
+  name                  String
+  status                TournamentStatus       @default(REGISTRATION)
+  votingDurationSeconds Int                    @default(300)
+  currentRound          Int                    @default(1)
+  createdAt             DateTime               @default(now())
+  startedAt             DateTime?
+  completedAt           DateTime?
+
+  contestants           TournamentContestant[]
+  matchups              Matchup[]
+
+  @@map("tournaments")
+}
+
+model TournamentContestant {
+  id           String     @id @default(uuid())
+  tournamentId String
+  contestantId String
+  seed         Int?
+  registeredAt DateTime   @default(now())
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  contestant   Contestant @relation(fields: [contestantId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, contestantId])
+  @@index([tournamentId])
+  @@index([contestantId])
+  @@map("tournament_contestants")
+}
+
+model Matchup {
+  id               String            @id @default(uuid())
+  tournamentId     String
+  roundNumber      Int
+  position         Int
+  contestantAId    String?
+  contestantBId    String?
+  winnerId         String?
+  status           MatchupStatus     @default(PENDING)
+  votingOpensAt    DateTime?
+  votingClosesAt   DateTime?
+  createdAt        DateTime          @default(now())
+  completedAt      DateTime?
+
+  tournament       Tournament        @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  contestantA      Contestant?       @relation("MatchupContestantA", fields: [contestantAId], references: [id], onDelete: SetNull)
+  contestantB      Contestant?       @relation("MatchupContestantB", fields: [contestantBId], references: [id], onDelete: SetNull)
+  winner           Contestant?       @relation("MatchupWinner", fields: [winnerId], references: [id], onDelete: SetNull)
+  roastLines       RoastLine[]
+  votes            Vote[]
+  tiebreakSessions TiebreakSession[]
+
+  @@unique([tournamentId, roundNumber, position])
+  @@index([tournamentId, roundNumber])
+  @@index([status])
+  @@index([votingClosesAt])
+  @@map("matchups")
+}
+
+model RoastLine {
+  id           String     @id @default(uuid())
+  matchupId    String
+  contestantId String
+  roundNumber  Int
+  content      String
+  submittedAt  DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  matchup      Matchup    @relation(fields: [matchupId], references: [id], onDelete: Cascade)
+  contestant   Contestant @relation(fields: [contestantId], references: [id], onDelete: Cascade)
+
+  @@unique([matchupId, contestantId])
+  @@index([matchupId])
+  @@index([contestantId])
+  @@map("roast_lines")
+}
+
+model Vote {
+  id           String     @id @default(uuid())
+  matchupId    String
+  voterId      String
+  contestantId String
+  createdAt    DateTime   @default(now())
+
+  matchup      Matchup    @relation(fields: [matchupId], references: [id], onDelete: Cascade)
+  voter        User       @relation(fields: [voterId], references: [id], onDelete: Cascade)
+  contestant   Contestant @relation(fields: [contestantId], references: [id], onDelete: Cascade)
+
+  // Enforces strictly one vote per authenticated voter per matchup at the database level
+  @@unique([matchupId, voterId])
+  @@index([matchupId, contestantId])
+  @@index([voterId])
+  @@map("votes")
+}
+
+model TiebreakSession {
+  id             String         @id @default(uuid())
+  matchupId      String
+  sessionNumber  Int            @default(1)
+  status         TiebreakStatus @default(OPEN)
+  winnerId       String?
+  votingOpensAt  DateTime
+  votingClosesAt DateTime
+  createdAt      DateTime       @default(now())
+  completedAt    DateTime?
+
+  matchup        Matchup        @relation(fields: [matchupId], references: [id], onDelete: Cascade)
+  votes          TiebreakVote[]
+
+  @@unique([matchupId, sessionNumber])
+  @@index([matchupId])
+  @@map("tiebreak_sessions")
+}
+
+model TiebreakVote {
+  id                String          @id @default(uuid())
+  tiebreakSessionId String
+  voterId           String
+  contestantId      String
+  createdAt         DateTime        @default(now())
+
+  tiebreakSession   TiebreakSession @relation(fields: [tiebreakSessionId], references: [id], onDelete: Cascade)
+  voter             User            @relation(fields: [voterId], references: [id], onDelete: Cascade)
+  contestant        Contestant      @relation(fields: [contestantId], references: [id], onDelete: Cascade)
+
+  // Enforces strictly one vote per voter per tiebreak session
+  @@unique([tiebreakSessionId, voterId])
+  @@index([tiebreakSessionId, contestantId])
+  @@map("tiebreak_votes")
+}
+
+model NotificationOutbox {
+  id             String             @id @default(uuid())
+  type           String
+  recipientEmail String
+  subject        String
+  body           String
+  metadata       String?
+  status         NotificationStatus @default(PENDING)
+  attempts       Int                @default(0)
+  lastError      String?
+  createdAt      DateTime           @default(now())
+  processedAt    DateTime?
+
+  @@index([status, createdAt])
+  @@map("notification_outbox")
+}
