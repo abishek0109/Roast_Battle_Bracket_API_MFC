@@ -3,8 +3,8 @@ services:
     name: roast-battle-bracket-api
     env: node
     plan: free
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npx prisma migrate deploy && node dist/server.js
+    buildCommand: npm install && npm run build
+    startCommand: node dist/server.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

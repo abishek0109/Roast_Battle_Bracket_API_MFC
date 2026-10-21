@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { execSync } from 'child_process';
 import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { connectDatabase, disconnectDatabase } from './config/database.js';
@@ -9,6 +10,20 @@ import { outboxWorker } from './jobs/outbox-worker.job.js';
 const startServer = async () => {
   try {
     logger.info('Initializing Roast Battle Bracket API Server...');
+
+    // Attempt automated database migrations if DATABASE_URL is provided
+    if (process.env.DATABASE_URL) {
+      try {
+        logger.info('Running database migrations (prisma migrate deploy)...');
+        execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+        logger.info('Database migrations applied successfully');
+      } catch (err: any) {
+        logger.warn(
+          { err: err.message },
+          'Prisma migrate deploy attempt encountered an error or database was not yet ready. Continuing startup...'
+        );
+      }
+    }
 
     // Attempt connecting to database
     try {
