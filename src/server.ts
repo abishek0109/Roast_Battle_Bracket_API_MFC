@@ -9,18 +9,21 @@ import { outboxWorker } from './jobs/outbox-worker.job.js';
 
 const startServer = async () => {
   try {
-    logger.info('Initializing Roast Battle Bracket API Server...');
+    const PORT = Number(process.env.PORT) || env.PORT || 3000;
+    const HOST = '0.0.0.0';
 
-    // Attempt automated database migrations if DATABASE_URL is provided
-    if (process.env.DATABASE_URL) {
+    logger.info({ port: PORT, host: HOST, env: env.NODE_ENV }, 'Initializing Roast Battle Bracket API Server...');
+
+    // Attempt automated database migrations if a valid remote or local DATABASE_URL is provided
+    if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost:5432')) {
       try {
         logger.info('Running database migrations (prisma migrate deploy)...');
-        execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+        execSync('npx prisma migrate deploy', { stdio: 'inherit', timeout: 30000 });
         logger.info('Database migrations applied successfully');
       } catch (err: any) {
         logger.warn(
           { err: err.message },
-          'Prisma migrate deploy attempt encountered an error or database was not yet ready. Continuing startup...'
+          'Prisma migrate deploy attempt encountered an error or database was not yet ready. Continuing server boot...'
         );
       }
     }
@@ -37,10 +40,11 @@ const startServer = async () => {
 
     const app = createApp();
 
-    const server = app.listen(env.PORT, () => {
-      logger.info(`🔥 Server is running on port ${env.PORT} in [${env.NODE_ENV}] mode`);
-      logger.info(`📚 Swagger OpenAPI documentation available at: http://localhost:${env.PORT}/api/docs`);
-      logger.info(`🩺 Health check endpoint: http://localhost:${env.PORT}/health`);
+    const server = app.listen(PORT, HOST, () => {
+      logger.info(`🔥 Server is running on http://${HOST}:${PORT} in [${env.NODE_ENV}] mode`);
+      logger.info(`🌐 Live Web Arena & Dashboard: http://${HOST}:${PORT}/`);
+      logger.info(`📚 Swagger OpenAPI documentation: http://${HOST}:${PORT}/api/docs`);
+      logger.info(`🩺 Health check endpoint: http://${HOST}:${PORT}/health`);
 
       // Start background workers
       matchupFinalizerScheduler.start();

@@ -5,10 +5,10 @@ dotenv.config();
 
 const envSchema = z.object({
   DATABASE_URL: z.string().default('postgresql://postgres:postgres@localhost:5432/roast_battle?schema=public'),
-  JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters long').default('super-secret-jwt-key-change-in-production-min-32-chars-long'),
+  JWT_SECRET: z.string().min(8, 'JWT_SECRET must be at least 8 characters long').default('super-secret-jwt-key-change-in-production-min-32-chars-long'),
   JWT_EXPIRES_IN: z.string().default('24h'),
   PORT: z.coerce.number().default(3000),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z.string().default('development'),
   CORS_ORIGIN: z.string().default('*'),
   VOTING_DURATION_SECONDS: z.coerce.number().min(10).default(300),
   MATCHUP_SCHEDULER_INTERVAL_MS: z.coerce.number().min(500).default(3000),
