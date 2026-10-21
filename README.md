@@ -2,27 +2,42 @@
 
 > Production-grade REST API and Interactive Tournament Arena for managing single-elimination roast battles with time-boxed voting, deterministic bye allocation, sudden-death tiebreak handling, transactional outbox email notifications, and concurrency-safe voting.
 
+[![Live Website](https://img.shields.io/badge/Live%20Website-GitHub%20Pages-success.svg?style=for-the-badge&logo=github)](https://abishek0109.github.io/Roast_Battle_Bracket_API_MFC/)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/abishek0109/Roast_Battle_Bracket_API_MFC)
+
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/Node.js-24+-green.svg)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.21-lightgrey.svg)](https://expressjs.com/)
 [![Prisma](https://img.shields.io/badge/Prisma-6.4-indigo.svg)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue.svg)](https://www.postgresql.org/)
-[![OpenAPI](https://img.shields.io/badge/Swagger-OpenAPI%203.0-orange.svg)](http://localhost:3000/api/docs)
+[![OpenAPI](https://img.shields.io/badge/Swagger-OpenAPI%203.0-orange.svg)](https://roast-battle-bracket-api.onrender.com/api/docs)
 [![Tests](https://img.shields.io/badge/Tests-55%20Passed-brightgreen.svg)](./tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 ---
 
+## 🌐 Live Website & Links
+
+| Service | Live Link |
+| :--- | :--- |
+| 🥊 **Live Web Arena & Bracket Dashboard** | **[https://abishek0109.github.io/Roast_Battle_Bracket_API_MFC/](https://abishek0109.github.io/Roast_Battle_Bracket_API_MFC/)** |
+| 📚 **Interactive Swagger API Docs** | **[https://roast-battle-bracket-api.onrender.com/api/docs](https://roast-battle-bracket-api.onrender.com/api/docs)** |
+| 🩺 **Backend API Health Probe** | **[https://roast-battle-bracket-api.onrender.com/health](https://roast-battle-bracket-api.onrender.com/health)** |
+| 🐙 **GitHub Repository** | **[https://github.com/abishek0109/Roast_Battle_Bracket_API_MFC](https://github.com/abishek0109/Roast_Battle_Bracket_API_MFC)** |
+
+---
+
 ## 🌟 Live Web Arena & Interactive Dashboard
 
-The application serves an interactive frontend dashboard directly from the root path (`/` or `/dashboard`):
+The live frontend is hosted on **GitHub Pages** and serves an interactive dashboard:
 
 - **🏆 Visual Bracket Arena**: Renders an interactive single-elimination tournament tree with seed indicators, auto-bye banners, and live match statuses.
 - **🔴 Real-Time Matchup Arena**: Displays the active battle with head-to-head competitor cards, submitted roast lines in speech bubbles, a live countdown timer, and interactive vote submission.
 - **🎙️ Comedian Roster**: Directory of participating roast comedians with seed ranks, titles, and stats.
 - **⚡ Quick API Playground**: Live copyable cURL commands and endpoint execution blocks.
-- **📚 Interactive Swagger Docs**: Integrated link to `/api/docs`.
+- **📚 Interactive Swagger Docs**: Integrated link to live OpenAPI documentation.
+
+Visit the live website at: **[https://abishek0109.github.io/Roast_Battle_Bracket_API_MFC/](https://abishek0109.github.io/Roast_Battle_Bracket_API_MFC/)**
 
 ---
 
