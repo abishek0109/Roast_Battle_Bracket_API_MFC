@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roast Battle Bracket Arena | Live Tournament Dashboard</title>
+  <meta name="description" content="Live single-elimination tournament bracket, roast-line battles, and voting dashboard for the Roast Battle Bracket API.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <!-- Background Glow FX -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <span class="flame-icon">🔥</span>
+        <div>
+          <h1>ROAST BATTLE <span>BRACKET</span></h1>
+          <p class="tagline">Single-Elimination Comedy Arena & Live Voting Engine</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-pill" id="systemStatusPill">
+          <span class="pulse-dot"></span>
+          <span id="systemStatusText">Connecting...</span>
+        </div>
+        <a href="/api/docs" target="_blank" class="btn btn-secondary" id="openSwaggerBtn">
+          <span>📚 Swagger Docs</span>
+        </a>
+        <a href="https://github.com/abishek0109/Roast_Battle_Bracket_API_MFC" target="_blank" class="btn btn-primary" id="openGithubBtn">
+          <span>⭐ GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="badge">⚔️ Tournament Season 2026</div>
+      <h2>Where Sharp Tongues Collide & Champions Advance</h2>
+      <p>Deterministic single-elimination brackets, time-boxed public voting windows, sudden-death tiebreak sessions, and zero duplicate votes guaranteed at the database level.</p>
+      
+      <div class="quick-stats">
+        <div class="stat-card">
+          <span class="stat-num" id="statContestants">5</span>
+          <span class="stat-label">Seed Contestants</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="statRounds">3</span>
+          <span class="stat-label">Tournament Rounds</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="statByes">3</span>
+          <span class="stat-label">Auto-Byes Handled</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="statDuration">300s</span>
+          <span class="stat-label">Voting Duration</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Navigation Tabs -->
+  <main class="main-container">
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="bracketTab" id="tabBracketBtn">🏆 Bracket Arena</button>
+      <button class="tab-btn" data-tab="matchupTab" id="tabMatchupBtn">🥊 Featured Roast Matchup</button>
+      <button class="tab-btn" data-tab="contestantsTab" id="tabContestantsBtn">🎙️ Comedians</button>
+      <button class="tab-btn" data-tab="apiExplorerTab" id="tabApiExplorerBtn">⚡ API Explorer</button>
+    </div>
+
+    <!-- TAB 1: Bracket Arena -->
+    <div class="tab-panel active" id="bracketTab">
+      <div class="panel-header">
+        <div>
+          <h3>All-Star Roast Showdown (5-Player Power-of-8 Bracket)</h3>
+          <p class="subtitle">Demonstrating deterministic bye assignment where 3 contestants receive auto-advancing byes and 2 battle in Round 1.</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="refreshBracketBtn">🔄 Refresh State</button>
+      </div>
+
+      <div class="bracket-wrapper" id="bracketTree">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 2: Featured Matchup -->
+    <div class="tab-panel" id="matchupTab">
+      <div class="matchup-arena-card">
+        <div class="arena-header">
+          <span class="live-tag">🔴 LIVE VOTING WINDOW</span>
+          <span class="countdown-badge" id="arenaCountdown">⏱️ 04:42 REMAINING</span>
+        </div>
+
+        <div class="battle-grid">
+          <!-- Fighter A -->
+          <div class="fighter-card" id="fighterACard">
+            <div class="avatar-ring">🎙️</div>
+            <h4>Jeff Ross</h4>
+            <div class="fighter-title">The Roastmaster General (Seed #1)</div>
+            <div class="roast-bubble">
+              <span class="quote">“</span>
+              <p>Your comedy specials look like infomercials for clinical sadness.</p>
+            </div>
+            <button class="btn btn-vote" id="voteBtnA" onclick="castVote('Jeff Ross')">Vote for Jeff 🔥</button>
+          </div>
+
+          <div class="versus-divider">
+            <span class="vs-circle">VS</span>
+          </div>
+
+          <!-- Fighter B -->
+          <div class="fighter-card" id="fighterBCard">
+            <div class="avatar-ring">🎤</div>
+            <h4>Nikki Glaser</h4>
+            <div class="fighter-title">Golden Tongue (Seed #2)</div>
+            <div class="roast-bubble">
+              <span class="quote">“</span>
+              <p>Your career has had fewer hits than a rotary phone in an airport terminal.</p>
+            </div>
+            <button class="btn btn-vote" id="voteBtnB" onclick="castVote('Nikki Glaser')">Vote for Nikki 🔥</button>
+          </div>
+        </div>
+
+        <div id="voteToast" class="vote-toast hidden"></div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Comedians -->
+    <div class="tab-panel" id="contestantsTab">
+      <div class="contestants-grid" id="contestantsList">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 4: API Explorer -->
+    <div class="tab-panel" id="apiExplorerTab">
+      <div class="api-explorer-card">
+        <div class="api-header">
+          <h4>Interactive Endpoint Quick Test</h4>
+          <p>Test key REST endpoints directly with simulated payloads or live execution.</p>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">Cast a Vote: POST /api/v1/vote/:matchupId</div>
+          <pre><code>curl -X POST http://localhost:3000/api/v1/vote/MATCHUP_ID \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"contestantId": "CONTESTANT_ID"}'</code></pre>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">Generate Bracket: POST /api/v1/bracket/generate</div>
+          <pre><code>curl -X POST http://localhost:3000/api/v1/bracket/generate \
+  -H "Authorization: Bearer ADMIN_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"tournamentId": "TOURNAMENT_ID"}'</code></pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>Roast Battle Bracket API &bull; Built with Express, TypeScript, PostgreSQL, Prisma & Vitest.</p>
+      <p class="copyright">&copy; 2026 Roast Battle Bracket Contributors. Licensed under MIT.</p>
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

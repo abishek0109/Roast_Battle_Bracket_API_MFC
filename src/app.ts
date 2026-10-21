@@ -1,4 +1,5 @@
 import express, { Express, Request, Response } from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env.js';
@@ -61,6 +62,13 @@ export const createApp = (): Express => {
       'Roast Battle Bracket API is running smoothly'
     );
   };
+
+  // Serve static web app and dashboard
+  const publicPath = path.resolve(process.cwd(), 'public');
+  app.use(express.static(publicPath));
+  app.get('/dashboard', (req: Request, res: Response) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+  });
 
   app.get('/health', healthHandler);
   app.get('/api/v1/health', healthHandler);

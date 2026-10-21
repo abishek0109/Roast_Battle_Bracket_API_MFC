@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: roast-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: roast_battle
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: roast-battle-api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgrespassword@postgres:5432/roast_battle?schema=public"
+      JWT_SECRET: "docker-deployment-super-secret-jwt-key-min-32-chars-long"
+      JWT_EXPIRES_IN: "24h"
+      PORT: 3000
+      NODE_ENV: "production"
+      CORS_ORIGIN: "*"
+      VOTING_DURATION_SECONDS: 300
+      MATCHUP_SCHEDULER_INTERVAL_MS: 3000
+      ALLOW_LIVE_VOTE_COUNTS: "false"
+    command: >
+      sh -c "npx prisma migrate deploy && npm run db:seed && node dist/server.js"
+
+volumes:
+  postgres_data:
